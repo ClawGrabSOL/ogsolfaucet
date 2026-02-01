@@ -1,450 +1,154 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
+    <title>Free Solana!</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The SOL Faucet - Free Solana</title>
-    <link rel="icon" type="image/png" href="/favicon.png">
-    <link rel="apple-touch-icon" href="/favicon.png">
-    <style>
-        body {
-            background: #c0c0c0;
-            font-family: 'Times New Roman', Times, serif;
-            margin: 0;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 700px;
-            margin: 0 auto;
-            background: #fff;
-            border: 3px ridge #808080;
-            padding: 20px;
-        }
-
-        .sol-logo {
-            width: 24px;
-            height: 24px;
-            vertical-align: middle;
-        }
-
-        .sol-logo-large {
-            width: 40px;
-            height: 40px;
-            vertical-align: middle;
-        }
-
-        h1 {
-            text-align: center;
-            color: #000080;
-            font-size: 2.5em;
-            margin: 10px 0;
-            text-shadow: 2px 2px #c0c0c0;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: #800000;
-            font-size: 1.1em;
-            margin-bottom: 20px;
-        }
-
-        hr {
-            border: none;
-            border-top: 2px ridge #808080;
-            margin: 20px 0;
-        }
-
-        .info-box {
-            background: #ffffcc;
-            border: 2px solid #808000;
-            padding: 15px;
-            margin: 20px 0;
-        }
-
-        .info-box h3 {
-            margin: 0 0 10px 0;
-            color: #808000;
-        }
-
-        .balance-display {
-            text-align: center;
-            background: #000;
-            color: #0f0;
-            font-family: 'Courier New', monospace;
-            font-size: 2em;
-            padding: 15px;
-            border: 3px inset #808080;
-            margin: 20px 0;
-        }
-
-        .stats {
-            display: flex;
-            justify-content: space-around;
-            margin: 20px 0;
-        }
-
-        .stat-box {
-            text-align: center;
-            background: #e0e0e0;
-            border: 2px ridge #808080;
-            padding: 10px 20px;
-        }
-
-        .stat-box .number {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #000080;
-        }
-
-        .claim-section {
-            background: #f0f0f0;
-            border: 3px ridge #808080;
-            padding: 20px;
-            margin: 20px 0;
-        }
-
-        .claim-section h2 {
-            text-align: center;
-            color: #800000;
-            margin-top: 0;
-        }
-
-        label {
-            display: block;
-            margin: 10px 0 5px;
-            font-weight: bold;
-        }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 8px;
-            font-size: 1em;
-            border: 2px inset #808080;
-            box-sizing: border-box;
-            font-family: 'Courier New', monospace;
-        }
-
-        .captcha-box {
-            background: #fff;
-            border: 2px inset #808080;
-            padding: 15px;
-            margin: 15px 0;
-            text-align: center;
-        }
-
-        .captcha-question {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #000080;
-            margin-bottom: 10px;
-        }
-
-        input[type="number"] {
-            width: 100px;
-            padding: 8px;
-            font-size: 1.2em;
-            text-align: center;
-            border: 2px inset #808080;
-        }
-
-        .btn {
-            display: block;
-            width: 100%;
-            padding: 15px;
-            font-size: 1.2em;
-            font-weight: bold;
-            background: linear-gradient(180deg, #e0e0e0 0%, #a0a0a0 100%);
-            border: 3px ridge #808080;
-            cursor: pointer;
-            margin-top: 15px;
-        }
-
-        .btn:hover {
-            background: linear-gradient(180deg, #f0f0f0 0%, #b0b0b0 100%);
-        }
-
-        .btn:active {
-            border-style: inset;
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .message {
-            padding: 15px;
-            margin: 15px 0;
-            border: 2px solid;
-            text-align: center;
-            font-weight: bold;
-        }
-
-        .message.success {
-            background: #ccffcc;
-            border-color: #008000;
-            color: #006600;
-        }
-
-        .message.error {
-            background: #ffcccc;
-            border-color: #800000;
-            color: #800000;
-        }
-
-        .recent-claims {
-            background: #f8f8f8;
-            border: 2px ridge #808080;
-            padding: 15px;
-            margin: 20px 0;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .recent-claims h3 {
-            margin: 0 0 10px 0;
-            color: #000080;
-        }
-
-        .claim-item {
-            font-family: 'Courier New', monospace;
-            font-size: 0.85em;
-            padding: 5px 0;
-            border-bottom: 1px dotted #ccc;
-        }
-
-        .claim-item:last-child {
-            border-bottom: none;
-        }
-
-        .footer {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 0.9em;
-            color: #666;
-        }
-
-        .footer a {
-            color: #000080;
-        }
-
-        .blink {
-            animation: blink 1s linear infinite;
-        }
-
-        @keyframes blink {
-            50% { opacity: 0; }
-        }
-
-        .marquee {
-            background: #000080;
-            color: #ffff00;
-            padding: 5px;
-            overflow: hidden;
-            margin-bottom: 10px;
-        }
-
-        .marquee span {
-            display: inline-block;
-            animation: marquee 15s linear infinite;
-        }
-
-        @keyframes marquee {
-            0% { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
-        }
-
-        .construction {
-            text-align: center;
-            font-size: 0.8em;
-        }
-    </style>
 </head>
 <body>
-    <div class="container">
-        <div class="marquee">
-            <span>* * * FREE SOLANA! Complete the captcha and receive 0.01 SOL instantly! * * *</span>
-        </div>
+<h1>Free Solana!</h1>
 
-        <h1><img src="https://cryptologos.cc/logos/solana-sol-logo.svg" class="sol-logo-large"> The SOL Faucet <img src="https://cryptologos.cc/logos/solana-sol-logo.svg" class="sol-logo-large"></h1>
-        <p class="subtitle">~ Free Solana For Everyone Since 2026 ~</p>
+<p>
+    To len't make sure you're not a bot, please solve this captcha:
+</p>
 
-        <hr>
+<p>
+    <b id="captcha-question">5 + 7 = </b>
+    <input type="text" id="captcha-answer" size="5">
+</p>
 
-        <div class="info-box">
-            <h3><img src="https://cryptologos.cc/logos/solana-sol-logo.svg" class="sol-logo"> What is this?</h3>
-            <p>This faucet gives out <b>FREE SOL</b> to anyone who completes a simple math captcha. Just like the original Bitcoin faucet from 2010, we believe in spreading crypto to everyone!</p>
-            <p><b>Reward:</b> 0.01 SOL per claim</p>
-        </div>
+<p>
+    Solana address: <input type="text" id="wallet" size="50">
+</p>
 
-        <div class="balance-display">
-            Faucet Balance: <span id="balance">Loading...</span> SOL
-        </div>
+<p>
+    <button id="claim-btn" onclick="claim()">Send me SOL!</button>
+</p>
 
-        <div class="stats">
-            <div class="stat-box">
-                <div class="number" id="total-claims">0</div>
-                <div>Total Claims</div>
-            </div>
-            <div class="stat-box">
-                <div class="number" id="total-sent">0</div>
-                <div>SOL Sent</div>
-            </div>
-        </div>
+<p id="message"></p>
 
-        <div class="claim-section">
-            <h2><img src="https://cryptologos.cc/logos/solana-sol-logo.svg" class="sol-logo"> Claim Your Free SOL <img src="https://cryptologos.cc/logos/solana-sol-logo.svg" class="sol-logo"></h2>
-            
-            <label for="wallet">Your Solana Wallet Address:</label>
-            <input type="text" id="wallet" placeholder="Enter your SOL address..." maxlength="50">
-            
-            <div class="captcha-box">
-                <div>Prove you're human!</div>
-                <div class="captcha-question" id="captcha-question">Loading...</div>
-                <input type="number" id="captcha-answer" placeholder="?">
-            </div>
+<hr>
 
-            <button class="btn" id="claim-btn" onclick="claim()">
-                <img src="https://cryptologos.cc/logos/solana-sol-logo.svg" class="sol-logo"> CLAIM 0.01 SOL <img src="https://cryptologos.cc/logos/solana-sol-logo.svg" class="sol-logo">
-            </button>
+<p>
+    <b>What's this?</b><br>
+    Once upon a time, receiving free bitcoin was as simple as visiting a website and clicking a button.
+    This is like that, but for Solana.<br><br>
+    
+    Everybody who visits gets <b>0.01 SOL</b>. Come back tomorrow for more!
+</p>
 
-            <div id="message"></div>
-        </div>
+<hr>
 
-        <div class="recent-claims">
-            <h3><img src="https://cryptologos.cc/logos/solana-sol-logo.svg" class="sol-logo"> Recent Claims:</h3>
-            <div id="claims-list">
-                <i>No claims yet...</i>
-            </div>
-        </div>
+<p>
+    <b>Stats:</b><br>
+    Faucet balance: <span id="balance">...</span> SOL<br>
+    Total given away: <span id="total-sent">...</span> SOL to <span id="total-claims">...</span> people
+</p>
 
-        <hr>
+<hr>
 
-        <div class="footer">
-            <p>Made with <img src="https://cryptologos.cc/logos/solana-sol-logo.svg" class="sol-logo"> for the Solana community</p>
-            <p>
-                <a href="https://solscan.io/account/FAUCET_WALLET" target="_blank" id="wallet-link">View Faucet Wallet</a>
-            </p>
-            <p class="construction">
-                <span class="blink">Best viewed with Netscape Navigator</span>
-            </p>
-        </div>
-    </div>
+<p>
+    <b>Recent recipients:</b>
+</p>
+<pre id="claims-list">loading...</pre>
 
-    <script>
-        let captchaAnswer = 0;
-        let faucetWallet = '';
+<hr>
 
-        // Generate captcha
-        function newCaptcha() {
-            const a = Math.floor(Math.random() * 20) + 1;
-            const b = Math.floor(Math.random() * 20) + 1;
-            const ops = ['+', '-', 'x'];
-            const op = ops[Math.floor(Math.random() * ops.length)];
-            
-            let question, answer;
-            switch(op) {
-                case '+':
-                    question = `${a} + ${b} = ?`;
-                    answer = a + b;
-                    break;
-                case '-':
-                    question = `${Math.max(a,b)} - ${Math.min(a,b)} = ?`;
-                    answer = Math.max(a,b) - Math.min(a,b);
-                    break;
-                case 'x':
-                    const small = Math.floor(Math.random() * 10) + 1;
-                    const small2 = Math.floor(Math.random() * 10) + 1;
-                    question = `${small} x ${small2} = ?`;
-                    answer = small * small2;
-                    break;
-            }
-            
-            document.getElementById('captcha-question').textContent = question;
-            document.getElementById('captcha-answer').value = '';
-            captchaAnswer = answer;
+<p>
+    <small>
+        This faucet is funded by donations. Want to help?<br>
+        Send SOL to: <code id="faucet-address">loading...</code>
+    </small>
+</p>
+
+<p>
+    <small>
+        <a href="#" id="wallet-link">View faucet wallet on Solscan</a>
+    </small>
+</p>
+
+<script>
+let captchaAnswer = 0;
+
+function newCaptcha() {
+    const a = Math.floor(Math.random() * 10) + 1;
+    const b = Math.floor(Math.random() * 10) + 1;
+    document.getElementById('captcha-question').textContent = a + ' + ' + b + ' = ';
+    document.getElementById('captcha-answer').value = '';
+    captchaAnswer = a + b;
+}
+
+async function fetchInfo() {
+    try {
+        const res = await fetch('/api/info');
+        const data = await res.json();
+        
+        document.getElementById('balance').textContent = data.balance.toFixed(4);
+        document.getElementById('total-claims').textContent = data.totalClaims;
+        document.getElementById('total-sent').textContent = data.totalSent.toFixed(2);
+        document.getElementById('faucet-address').textContent = data.wallet;
+        document.getElementById('wallet-link').href = 'https://solscan.io/account/' + data.wallet;
+        
+        if (data.recentClaims && data.recentClaims.length > 0) {
+            document.getElementById('claims-list').textContent = data.recentClaims
+                .map(c => c.wallet.slice(0,8) + '...' + c.wallet.slice(-4) + '  0.01 SOL')
+                .join('\n');
+        } else {
+            document.getElementById('claims-list').textContent = '(none yet)';
         }
+    } catch (e) {
+        console.error(e);
+    }
+}
 
-        // Fetch faucet info
-        async function fetchInfo() {
-            try {
-                const res = await fetch('/api/info');
-                const data = await res.json();
-                
-                document.getElementById('balance').textContent = data.balance.toFixed(4);
-                document.getElementById('total-claims').textContent = data.totalClaims;
-                document.getElementById('total-sent').textContent = data.totalSent.toFixed(2);
-                faucetWallet = data.wallet;
-                document.getElementById('wallet-link').href = `https://solscan.io/account/${faucetWallet}`;
-                
-                // Update recent claims
-                if (data.recentClaims && data.recentClaims.length > 0) {
-                    const list = document.getElementById('claims-list');
-                    list.innerHTML = data.recentClaims.map(c => 
-                        `<div class="claim-item">[OK] ${c.wallet.slice(0,6)}...${c.wallet.slice(-4)} received 0.01 SOL</div>`
-                    ).join('');
-                }
-            } catch (e) {
-                console.error('Error fetching info:', e);
-            }
-        }
-
-        // Claim SOL
-        async function claim() {
-            const wallet = document.getElementById('wallet').value.trim();
-            const answer = parseInt(document.getElementById('captcha-answer').value);
-            const msgDiv = document.getElementById('message');
-            const btn = document.getElementById('claim-btn');
-            
-            // Validate
-            if (!wallet || wallet.length < 32) {
-                msgDiv.className = 'message error';
-                msgDiv.textContent = 'ERROR: Please enter a valid Solana wallet address!';
-                return;
-            }
-            
-            if (answer !== captchaAnswer) {
-                msgDiv.className = 'message error';
-                msgDiv.textContent = 'ERROR: Wrong answer! Try again.';
-                newCaptcha();
-                return;
-            }
-            
-            btn.disabled = true;
-            btn.textContent = 'Sending...';
-            
-            try {
-                const res = await fetch('/api/claim', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ wallet, captcha: answer })
-                });
-                
-                const data = await res.json();
-                
-                if (data.success) {
-                    msgDiv.className = 'message success';
-                    msgDiv.innerHTML = `SUCCESS! 0.01 SOL sent to your wallet!<br><a href="https://solscan.io/tx/${data.txHash}" target="_blank">View Transaction</a>`;
-                    fetchInfo();
-                } else {
-                    msgDiv.className = 'message error';
-                    msgDiv.textContent = `ERROR: ${data.error}`;
-                }
-            } catch (e) {
-                msgDiv.className = 'message error';
-                msgDiv.textContent = 'ERROR: Error connecting to server. Try again.';
-            }
-            
-            btn.disabled = false;
-            btn.innerHTML = '<img src="https://cryptologos.cc/logos/solana-sol-logo.svg" class="sol-logo"> CLAIM 0.01 SOL <img src="https://cryptologos.cc/logos/solana-sol-logo.svg" class="sol-logo">';
-            newCaptcha();
-        }
-
-        // Init
+async function claim() {
+    const wallet = document.getElementById('wallet').value.trim();
+    const answer = parseInt(document.getElementById('captcha-answer').value);
+    const msg = document.getElementById('message');
+    const btn = document.getElementById('claim-btn');
+    
+    if (!wallet || wallet.length < 32) {
+        msg.textContent = 'Please enter a valid Solana address.';
+        return;
+    }
+    
+    if (answer !== captchaAnswer) {
+        msg.textContent = 'Wrong answer, try again.';
         newCaptcha();
-        fetchInfo();
-        setInterval(fetchInfo, 30000);
-    </script>
+        return;
+    }
+    
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    msg.textContent = '';
+    
+    try {
+        const res = await fetch('/api/claim', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ wallet: wallet, captcha: answer })
+        });
+        
+        const data = await res.json();
+        
+        if (data.success) {
+            msg.innerHTML = 'Sent! <a href="https://solscan.io/tx/' + data.txHash + '">View transaction</a>';
+            fetchInfo();
+        } else {
+            msg.textContent = data.error || 'Something went wrong.';
+        }
+    } catch (e) {
+        msg.textContent = 'Error connecting to server.';
+    }
+    
+    btn.disabled = false;
+    btn.textContent = 'Send me SOL!';
+    newCaptcha();
+}
+
+newCaptcha();
+fetchInfo();
+setInterval(fetchInfo, 30000);
+</script>
 </body>
 </html>
