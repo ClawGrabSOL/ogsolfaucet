@@ -2,7 +2,7 @@ const { Connection, Keypair, PublicKey, Transaction, SystemProgram, sendAndConfi
 const bs58 = require('bs58');
 
 const FAUCET_PK = process.env.FAUCET_PK;
-const CLAIM_AMOUNT = 0.01;
+const CLAIM_AMOUNT = 0.001;
 const SOLANA_RPC = process.env.SOLANA_RPC || 'https://api.mainnet-beta.solana.com';
 
 module.exports = async (req, res) => {

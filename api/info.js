@@ -27,7 +27,7 @@ module.exports = async (req, res) => {
     res.json({
         balance,
         wallet,
-        claimAmount: 0.01,
+        claimAmount: 0.001,
         totalClaims: 0,
         totalSent: 0,
         recentClaims: []

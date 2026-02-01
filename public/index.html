@@ -22,7 +22,7 @@
 </p>
 
 <p>
-    <button id="claim-btn" onclick="claim()">Send me SOL!</button>
+    <button id="claim-btn" onclick="claim()">Send me 0.001 SOL!</button>
 </p>
 
 <p id="message"></p>
@@ -34,7 +34,7 @@
     Once upon a time, receiving free bitcoin was as simple as visiting a website and clicking a button.
     This is like that, but for Solana.<br><br>
     
-    Everybody who visits gets <b>0.01 SOL</b>. Come back tomorrow for more!
+    Everybody who visits gets <b>0.001 SOL</b>. Come back tomorrow for more!
 </p>
 
 <hr>
@@ -91,7 +91,7 @@ async function fetchInfo() {
         
         if (data.recentClaims && data.recentClaims.length > 0) {
             document.getElementById('claims-list').textContent = data.recentClaims
-                .map(c => c.wallet.slice(0,8) + '...' + c.wallet.slice(-4) + '  0.01 SOL')
+                .map(c => c.wallet.slice(0,8) + '...' + c.wallet.slice(-4) + '  0.001 SOL')
                 .join('\n');
         } else {
             document.getElementById('claims-list').textContent = '(none yet)';
