@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Solana Faucet — Free SOL</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#080010;
+  --bg2:#0c0018;
+  --bg3:#100020;
+  --card:#110022;
+  --card2:#160028;
+  --border:#1e0a38;
+  --border2:#2a1050;
+  --border3:#3d1872;
+  --text:#f0eeff;
+  --sub:#7060a0;
+  --muted:#3a2060;
+  --purple:#9945ff;
+  --purple-d:#7b2fe0;
+  --purple-l:rgba(153,69,255,.1);
+  --purple-m:rgba(153,69,255,.2);
+  --green:#14f195;
+  --green-l:rgba(20,241,149,.08);
+  --green-m:rgba(20,241,149,.18);
+  --mono:'JetBrains Mono',monospace;
+}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+button{cursor:pointer;font-family:'Inter',sans-serif;}
+input{font-family:var(--mono);}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:var(--border3);border-radius:10px;}
+
+/* ─── BG NOISE ─── */
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 800px 600px at 50% -100px, rgba(153,69,255,.12), transparent),
+    radial-gradient(ellipse 400px 300px at 90% 80%, rgba(20,241,149,.05), transparent);
+}
+
+/* ─── NAV ─── */
+nav{
+  position:relative;z-index:10;
+  padding:18px 40px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);
+  background:rgba(8,0,16,.6);backdrop-filter:blur(16px);
+}
+.nav-brand{display:flex;align-items:center;gap:12px;}
+.nav-logo{
+  width:34px;height:34px;border-radius:9px;
+  background:linear-gradient(135deg,#9945ff,#14f195);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;
+}
+.nav-name{font-size:16px;font-weight:800;color:#fff;letter-spacing:-0.3px;}
+.nav-name em{font-style:normal;color:var(--green);}
+.nav-net{
+  display:flex;align-items:center;gap:6px;
+  background:var(--card);border:1px solid var(--border2);
+  border-radius:100px;padding:6px 14px;
+  font-size:12px;font-weight:700;color:var(--sub);
+  font-family:var(--mono);
+}
+.net-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);}
+.nav-right{display:flex;gap:8px;align-items:center;}
+.nav-link{
+  font-size:13px;font-weight:600;color:var(--sub);
+  background:none;border:none;cursor:pointer;padding:7px 12px;
+  transition:color .12s;
+}
+.nav-link:hover{color:#fff;}
+
+/* ─── MAIN LAYOUT ─── */
+.page{
+  position:relative;z-index:1;
+  max-width:960px;margin:0 auto;
+  padding:60px 24px 80px;
+}
+
+/* ─── HERO HEADER ─── */
+.faucet-header{text-align:center;margin-bottom:48px;}
+.fh-tag{
+  display:inline-flex;align-items:center;gap:7px;
+  font-family:var(--mono);font-size:11px;font-weight:700;
+  color:var(--green);background:var(--green-l);border:1px solid var(--green-m);
+  border-radius:100px;padding:5px 14px;margin-bottom:22px;
+  text-transform:uppercase;letter-spacing:1.2px;
+}
+.fh-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);}
+.faucet-header h1{
+  font-size:52px;font-weight:900;letter-spacing:-2px;
+  color:#fff;margin-bottom:12px;line-height:1.05;
+}
+.faucet-header h1 .sol{
+  background:linear-gradient(90deg,#9945ff,#14f195);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.faucet-header p{font-size:16px;color:var(--sub);line-height:1.65;max-width:500px;margin:0 auto;}
+
+/* ─── STATS ROW ─── */
+.stats-row{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
+  background:var(--border);border-radius:12px;overflow:hidden;
+  margin-bottom:36px;
+}
+.stat-cell{
+  background:var(--card);padding:18px 20px;text-align:center;
+}
+.stat-num{
+  font-family:var(--mono);font-size:20px;font-weight:700;color:#fff;
+  margin-bottom:4px;
+}
+.stat-num.green{color:var(--green);}
+.stat-num.purple{color:var(--purple);}
+.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;}
+
+/* ─── MAIN FAUCET CARD ─── */
+.faucet-card{
+  background:var(--card);
+  border:1px solid var(--border2);
+  border-radius:20px;
+  overflow:hidden;
+  margin-bottom:24px;
+  box-shadow:0 0 60px rgba(153,69,255,.07);
+}
+.fc-top{
+  padding:28px 32px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:12px;
+}
+.fc-top-left h2{font-size:18px;font-weight:800;color:#fff;margin-bottom:4px;}
+.fc-top-left p{font-size:13px;color:var(--sub);}
+.fc-balance{
+  background:var(--bg2);border:1px solid var(--border2);
+  border-radius:10px;padding:10px 18px;text-align:right;
+}
+.fcb-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:3px;}
+.fcb-val{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--green);}
+
+/* ─── AMOUNT SELECTOR ─── */
+.amount-selector{
+  padding:24px 32px;border-bottom:1px solid var(--border);
+}
+.as-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;}
+.amounts{display:flex;gap:10px;flex-wrap:wrap;}
+.amt-btn{
+  padding:10px 20px;border-radius:9px;
+  font-size:13.5px;font-weight:700;
+  background:var(--bg2);color:var(--sub);border:1px solid var(--border2);
+  cursor:pointer;transition:all .14s;font-family:var(--mono);
+}
+.amt-btn:hover{border-color:var(--border3);color:#fff;}
+.amt-btn.active{
+  background:var(--purple-l);color:var(--purple);
+  border-color:var(--border3);
+  box-shadow:0 0 16px rgba(153,69,255,.15);
+}
+.amt-custom-wrap{display:flex;align-items:center;gap:8px;flex:1;min-width:160px;}
+.amt-custom{
+  flex:1;padding:10px 14px;border-radius:9px;
+  background:var(--bg2);border:1px solid var(--border2);
+  color:#fff;font-size:13px;outline:none;
+  transition:border-color .14s;
+}
+.amt-custom:focus{border-color:var(--border3);}
+.amt-custom::placeholder{color:var(--muted);}
+.amt-unit{font-size:12px;font-weight:700;color:var(--sub);}
+
+/* ─── WALLET INPUT ─── */
+.wallet-section{padding:24px 32px;border-bottom:1px solid var(--border);}
+.ws-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
+.wallet-input-row{display:flex;gap:10px;}
+.wallet-input{
+  flex:1;padding:14px 18px;border-radius:10px;
+  background:var(--bg2);border:1px solid var(--border2);
+  color:#fff;font-size:13.5px;outline:none;
+  transition:border-color .14s;letter-spacing:.3px;
+}
+.wallet-input:focus{border-color:var(--purple);}
+.wallet-input.valid{border-color:rgba(20,241,149,.4);}
+.wallet-input.invalid{border-color:rgba(255,80,80,.4);}
+.wallet-input::placeholder{color:var(--muted);}
+.paste-btn{
+  padding:0 18px;border-radius:10px;
+  background:var(--bg3);border:1px solid var(--border2);
+  color:var(--sub);font-size:13px;font-weight:700;
+  cursor:pointer;transition:all .14s;white-space:nowrap;
+}
+.paste-btn:hover{border-color:var(--border3);color:#fff;}
+
+/* ─── CAPTCHA / VERIFY ─── */
+.verify-section{padding:20px 32px;border-bottom:1px solid var(--border);}
+.verify-row{display:flex;align-items:center;gap:14px;}
+.verify-check{
+  width:22px;height:22px;border-radius:5px;
+  border:1.5px solid var(--border3);background:var(--bg2);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:all .14s;font-size:13px;
+}
+.verify-check.checked{background:var(--purple);border-color:var(--purple);}
+.verify-label{font-size:13.5px;color:var(--sub);}
+.verify-label strong{color:#fff;}
+.verify-badge{
+  margin-left:auto;font-family:var(--mono);font-size:10px;
+  color:var(--muted);display:flex;align-items:center;gap:5px;
+}
+
+/* ─── CLAIM BUTTON ─── */
+.claim-section{padding:24px 32px;}
+.claim-btn{
+  width:100%;padding:18px;border-radius:12px;
+  font-size:16px;font-weight:800;
+  background:linear-gradient(135deg,#9945ff,#6b2cd1);
+  color:#fff;border:none;cursor:pointer;
+  box-shadow:0 0 30px rgba(153,69,255,.25);
+  transition:all .18s;letter-spacing:-0.3px;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  position:relative;overflow:hidden;
+}
+.claim-btn::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.08),transparent);
+}
+.claim-btn:hover:not(:disabled){
+  box-shadow:0 0 50px rgba(153,69,255,.4);
+  transform:translateY(-1px);
+}
+.claim-btn:disabled{
+  background:var(--card2);color:var(--muted);cursor:not-allowed;
+  box-shadow:none;transform:none;
+}
+.claim-btn.loading{pointer-events:none;}
+.claim-btn .btn-icon{font-size:20px;}
+
+/* cooldown bar */
+.cooldown-bar{
+  height:3px;background:var(--border);border-radius:0 0 20px 20px;
+  overflow:hidden;margin-top:-1px;display:none;
+}
+.cooldown-fill{
+  height:100%;background:linear-gradient(90deg,#9945ff,#14f195);
+  transition:width .5s linear;
+}
+
+/* ─── NETWORK TABS ─── */
+.net-tabs{
+  display:flex;gap:8px;margin-bottom:24px;
+  background:var(--card);border:1px solid var(--border2);
+  border-radius:12px;padding:6px;
+}
+.net-tab{
+  flex:1;padding:10px;border-radius:8px;
+  font-size:13px;font-weight:700;text-align:center;
+  color:var(--sub);background:none;border:none;cursor:pointer;
+  transition:all .14s;font-family:var(--mono);
+}
+.net-tab:hover{color:#fff;}
+.net-tab.active{background:var(--card2);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.4);}
+.net-tab .net-badge{
+  font-size:9px;padding:1px 5px;border-radius:3px;margin-left:6px;
+  font-weight:700;text-transform:uppercase;letter-spacing:.5px;vertical-align:middle;
+}
+.badge-devnet{background:var(--orange-l,rgba(255,160,0,.1));color:#ffa000;}
+.badge-mainnet{background:var(--green-l);color:var(--green);}
+.badge-testnet{background:var(--purple-l);color:var(--purple);}
+
+/* ─── RECENT CLAIMS ─── */
+.claims-card{
+  background:var(--card);border:1px solid var(--border2);border-radius:16px;overflow:hidden;
+  margin-bottom:24px;
+}
+.claims-header{
+  padding:18px 24px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.claims-title{font-size:14px;font-weight:700;color:#fff;}
+.claims-live{
+  display:flex;align-items:center;gap:6px;
+  font-size:11px;font-weight:700;color:var(--green);
+}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+.claims-list{max-height:280px;overflow-y:auto;}
+.claim-row{
+  display:grid;grid-template-columns:1fr auto auto;gap:16px;align-items:center;
+  padding:13px 24px;border-bottom:1px solid var(--border);
+  transition:background .12s;
+}
+.claim-row:last-child{border-bottom:none;}
+.claim-row:hover{background:var(--bg2);}
+.claim-row.new{animation:flashRow .6s ease;}
+@keyframes flashRow{0%{background:rgba(20,241,149,.08);}100%{background:transparent;}}
+.cr-addr{font-family:var(--mono);font-size:12.5px;color:var(--sub);}
+.cr-addr span{color:#fff;}
+.cr-amount{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--green);}
+.cr-time{font-size:11px;color:var(--muted);}
+
+/* ─── INFO CARDS ─── */
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.info-card{
+  background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:22px;
+}
+.info-card h3{font-size:14px;font-weight:700;color:#fff;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.info-card p, .info-card li{font-size:13px;color:var(--sub);line-height:1.7;}
+.info-card ul{padding-left:16px;}
+.info-card li{margin-bottom:4px;}
+.info-card code{
+  font-family:var(--mono);font-size:12px;color:var(--purple);
+  background:var(--purple-l);padding:1px 6px;border-radius:3px;
+}
+
+/* ─── MODAL ─── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(10px);
+  z-index:1000;display:none;align-items:center;justify-content:center;padding:20px;
+}
+.modal-overlay.show{display:flex;}
+.modal{
+  background:var(--card);border:1px solid var(--border2);border-radius:20px;
+  padding:0;width:100%;max-width:440px;overflow:hidden;
+  box-shadow:0 0 80px rgba(153,69,255,.15);
+}
+.modal-body{padding:36px 32px;text-align:center;}
+.modal-icon{font-size:52px;margin-bottom:16px;}
+.modal-title{font-size:22px;font-weight:800;color:#fff;margin-bottom:8px;}
+.modal-sub{font-size:14px;color:var(--sub);line-height:1.6;margin-bottom:28px;}
+.modal-tx{
+  background:var(--bg2);border:1px solid var(--border2);border-radius:10px;
+  padding:14px 18px;margin-bottom:20px;text-align:left;
+}
+.tx-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:5px;}
+.tx-val{font-family:var(--mono);font-size:12.5px;color:var(--green);word-break:break-all;}
+.modal-sol{
+  font-family:var(--mono);font-size:36px;font-weight:700;
+  color:var(--green);margin-bottom:24px;
+  text-shadow:0 0 30px rgba(20,241,149,.3);
+}
+.modal-close-btn{
+  width:100%;padding:13px;border-radius:10px;
+  font-size:14px;font-weight:700;
+  background:var(--purple);color:#fff;border:none;cursor:pointer;
+  transition:all .15s;
+}
+.modal-close-btn:hover{background:var(--purple-d);}
+.modal-footer-links{display:flex;gap:16px;justify-content:center;margin-top:16px;}
+.modal-footer-links a{font-size:12px;color:var(--sub);cursor:pointer;transition:color .12s;}
+.modal-footer-links a:hover{color:#fff;}
+
+/* ─── TOAST ─── */
+.toast{
+  position:fixed;bottom:24px;right:24px;z-index:9000;
+  background:var(--card2);border:1px solid var(--border2);
+  border-radius:10px;padding:14px 18px;
+  display:flex;align-items:center;gap:12px;
+  box-shadow:0 8px 40px rgba(0,0,0,.8);
+  transform:translateY(120px);opacity:0;
+  transition:all .3s cubic-bezier(.34,1.56,.64,1);
+  min-width:240px;
+}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast-icon{font-size:18px;flex-shrink:0;}
+.toast-text strong{display:block;font-size:13px;font-weight:700;color:#fff;margin-bottom:1px;}
+.toast-text span{font-size:12px;color:var(--sub);}
+
+@media(max-width:700px){
+  nav{padding:14px 20px;}
+  .page{padding:40px 16px 60px;}
+  .faucet-header h1{font-size:36px;}
+  .stats-row{grid-template-columns:1fr 1fr;}
+  .fc-top,.wallet-input-row{flex-direction:column;}
+  .amounts{flex-direction:column;}
+  .info-grid{grid-template-columns:1fr;}
+  .claim-row{grid-template-columns:1fr auto;}
+  .cr-time{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">
+    <div class="nav-logo">◎</div>
+    <span class="nav-name">Sol<em>Faucet</em></span>
+  </div>
+  <div class="nav-net">
+    <span class="net-dot"></span>
+    <span id="netLabel">Devnet</span>
+  </div>
+  <div class="nav-right">
+    <button class="nav-link" onclick="document.getElementById('howto').scrollIntoView({behavior:'smooth'})">How it works</button>
+  </div>
+</nav>
+
+<!-- PAGE -->
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="faucet-header">
+    <div class="fh-tag"><span class="fh-dot"></span> Free SOL — No Strings</div>
+    <h1>Solana <span class="sol">Faucet</span></h1>
+    <p>The original way to get SOL. Enter your wallet, pick your amount, receive instantly. Inspired by the first Bitcoin faucet.</p>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-cell">
+      <div class="stat-num green" id="statTotal">1,284.50</div>
+      <div class="stat-label">SOL Distributed</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-num" id="statClaims">8,402</div>
+      <div class="stat-label">Total Claims</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-num purple" id="statToday">142</div>
+      <div class="stat-label">Claims Today</div>
+    </div>
+
+  </div>
+
+  <!-- NETWORK TABS -->
+  <div class="net-tabs">
+    <button class="net-tab active" onclick="setNet(this,'Devnet')">
+      Devnet <span class="net-badge badge-devnet">Free</span>
+    </button>
+    <button class="net-tab" onclick="setNet(this,'Testnet')">
+      Testnet <span class="net-badge badge-testnet">Free</span>
+    </button>
+    <button class="net-tab" onclick="setNet(this,'Mainnet')">
+      Mainnet <span class="net-badge badge-mainnet">Paid</span>
+    </button>
+  </div>
+
+  <!-- MAIN FAUCET CARD -->
+  <div class="faucet-card">
+
+    <div class="fc-top">
+      <div class="fc-top-left">
+        <h2>Request SOL</h2>
+        <p>One claim per wallet per 24 hours</p>
+      </div>
+
+    </div>
+
+    <!-- AMOUNT -->
+    <div class="amount-selector">
+      <div class="as-label">Amount</div>
+      <div class="amounts">
+        <button class="amt-btn" onclick="setAmt(this,'0.1')">0.1 SOL</button>
+        <button class="amt-btn active" onclick="setAmt(this,'0.5')">0.5 SOL</button>
+        <button class="amt-btn" onclick="setAmt(this,'1')">1 SOL</button>
+        <button class="amt-btn" onclick="setAmt(this,'2')">2 SOL</button>
+        <div class="amt-custom-wrap">
+          <input class="amt-custom" id="customAmt" type="number" min="0.001" max="5" step="0.1" placeholder="Custom..." oninput="setCustomAmt(this)"/>
+          <span class="amt-unit">SOL</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- WALLET -->
+    <div class="wallet-section">
+      <div class="ws-label">Solana Wallet Address</div>
+      <div class="wallet-input-row">
+        <input
+          class="wallet-input"
+          id="walletInput"
+          type="text"
+          placeholder="Enter your Solana wallet address (e.g. 7xKX...)"
+          oninput="validateWallet(this)"
+          spellcheck="false"
+          autocomplete="off"
+        />
+        <button class="paste-btn" onclick="pasteAddr()">Paste</button>
+      </div>
+      <div id="walletMsg" style="font-size:12px;margin-top:8px;display:none;"></div>
+    </div>
+
+    <!-- VERIFY -->
+    <div class="verify-section">
+      <div class="verify-row">
+        <div class="verify-check" id="humanCheck" onclick="toggleHuman()"></div>
+        <span class="verify-label">I am a <strong>human</strong> — not a bot or script</span>
+        <span class="verify-badge">🔒 Anti-Abuse</span>
+      </div>
+    </div>
+
+    <!-- CLAIM -->
+    <div class="claim-section">
+      <button class="claim-btn" id="claimBtn" onclick="claim()" disabled>
+        <span class="btn-icon">◎</span>
+        Request SOL
+      </button>
+      <div style="font-size:11.5px;color:var(--muted);text-align:center;margin-top:12px;">
+        By claiming, you agree this is for development/testing. Mainnet SOL is provided by community donors.
+      </div>
+    </div>
+
+    <div class="cooldown-bar" id="cooldownBar">
+      <div class="cooldown-fill" id="cooldownFill" style="width:100%;"></div>
+    </div>
+
+  </div>
+
+  <!-- RECENT CLAIMS -->
+  <div class="claims-card">
+    <div class="claims-header">
+      <span class="claims-title">Recent Claims</span>
+      <span class="claims-live"><span class="live-dot"></span>Live</span>
+    </div>
+    <div class="claims-list" id="claimsList"></div>
+  </div>
+
+  <!-- INFO -->
+  <div class="info-grid" id="howto">
+    <div class="info-card">
+      <h3>📖 How It Works</h3>
+      <ul>
+        <li>Enter your Solana wallet address</li>
+        <li>Select how much SOL you need</li>
+        <li>Check the human box and click claim</li>
+        <li>SOL arrives in your wallet within seconds</li>
+        <li>One claim per wallet per 24 hours</li>
+      </ul>
+    </div>
+    <div class="info-card">
+      <h3>⚙️ Network Info</h3>
+      <p>
+        <strong style="color:#fff;">Devnet / Testnet</strong> — Unlimited free SOL for development. No real value.<br/><br/>
+        <strong style="color:#fff;">Mainnet</strong> — Real SOL, community funded. Limited to <code>0.5 SOL</code> per claim. Help keep the faucet alive by donating.
+      </p>
+    </div>
+    <div class="info-card">
+      <h3>🔒 Limits & Rules</h3>
+      <ul>
+        <li>Max <code>2 SOL</code> per claim (devnet/testnet)</li>
+        <li>Max <code>0.5 SOL</code> per claim (mainnet)</li>
+        <li>24-hour cooldown per wallet address</li>
+        <li>IP rate limiting applies</li>
+        <li>Bot wallets are blacklisted automatically</li>
+      </ul>
+    </div>
+    <div class="info-card">
+      <h3>💜 Donate to the Faucet</h3>
+      <p>Mainnet faucet runs on community donations. Every SOL donated helps developers test without burning real money.</p>
+      <div style="margin-top:12px;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;cursor:pointer;" onclick="copyDonate()">
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:4px;">Donate Address</div>
+        <div style="font-family:var(--mono);font-size:11.5px;color:var(--purple);word-break:break-all;" id="donateAddr">SoLFaucet1111111111111111111111111111111111</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- SUCCESS MODAL -->
+<div class="modal-overlay" id="successModal" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-body">
+      <div class="modal-icon">🎉</div>
+      <div class="modal-title">SOL Sent!</div>
+      <div class="modal-sub">Your SOL is on its way. It should appear in your wallet within seconds.</div>
+      <div class="modal-sol" id="modalAmt">+0.5 SOL</div>
+      <div class="modal-tx">
+        <div class="tx-label">Transaction Signature</div>
+        <div class="tx-val" id="modalTx">generating...</div>
+      </div>
+      <button class="modal-close-btn" onclick="document.getElementById('successModal').classList.remove('show')">Done</button>
+      <div class="modal-footer-links">
+        <a onclick="openExplorer()">View on Solscan ↗</a>
+        <a onclick="document.getElementById('successModal').classList.remove('show')">Close</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span class="toast-icon" id="ti">◎</span>
+  <div class="toast-text">
+    <strong id="tt">Done</strong>
+    <span id="tm">Action complete.</span>
+  </div>
+</div>
+
+<script>
+// ─── STATE ───
+let selectedAmt = 0.5;
+let humanVerified = false;
+let currentNet = 'Devnet';
+let isCooldown = false;
+let lastTx = '';
+
+// ─── SEED CLAIMS ───
+const names = ['7xKX','4mQR','9pBZ','2nAL','6kFW','3rTY','8hCV','5jDN','1wSP','0qMX'];
+const initClaims = [
+  {addr:'7xKXmn...Q4Rp',amt:0.5,time:'2 min ago'},
+  {addr:'4mQR9k...Y7Lw',amt:1.0,time:'5 min ago'},
+  {addr:'9pBZv2...K3Xm',amt:0.1,time:'8 min ago'},
+  {addr:'2nALf8...R9Qp',amt:2.0,time:'11 min ago'},
+  {addr:'6kFWh4...M2Tz',amt:0.5,time:'14 min ago'},
+  {addr:'3rTYj1...P6Vn',amt:1.0,time:'19 min ago'},
+  {addr:'8hCVe5...W8Kb',amt:0.5,time:'23 min ago'},
+  {addr:'5jDNq7...A4Rc',amt:0.1,time:'31 min ago'},
+];
+
+function renderClaims(claims){
+  const list = document.getElementById('claimsList');
+  list.innerHTML = claims.map((c,i)=>`
+    <div class="claim-row${i===0?' new':''}">
+      <span class="cr-addr"><span>${c.addr}</span></span>
+      <span class="cr-amount">+${c.amt.toFixed(1)} SOL</span>
+      <span class="cr-time">${c.time}</span>
+    </div>
+  `).join('');
+}
+renderClaims(initClaims);
+
+// ─── NETWORK ───
+function setNet(btn, net){
+  document.querySelectorAll('.net-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  currentNet = net;
+  document.getElementById('netLabel').textContent = net;
+  if(net === 'Mainnet'){
+    showToast('⚠️','Mainnet Selected','Real SOL — limited to 0.5 SOL per claim.');
+    // cap at 0.5 for mainnet
+    if(selectedAmt > 0.5){ setAmtDirect(0.5); }
+  }
+}
+
+// ─── AMOUNT ───
+function setAmt(btn, amt){
+  document.querySelectorAll('.amt-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('customAmt').value = '';
+  selectedAmt = parseFloat(amt);
+  checkReady();
+}
+function setAmtDirect(amt){
+  selectedAmt = amt;
+  document.querySelectorAll('.amt-btn').forEach(b=>{
+    b.classList.toggle('active', parseFloat(b.textContent) === amt);
+  });
+}
+function setCustomAmt(input){
+  document.querySelectorAll('.amt-btn').forEach(b=>b.classList.remove('active'));
+  const v = parseFloat(input.value);
+  if(!isNaN(v) && v > 0){
+    selectedAmt = Math.min(v, currentNet==='Mainnet' ? 0.5 : 5);
+  }
+  checkReady();
+}
+
+// ─── WALLET VALIDATION ───
+function validateWallet(input){
+  const val = input.value.trim();
+  const msg = document.getElementById('walletMsg');
+  if(!val){ input.className='wallet-input'; msg.style.display='none'; checkReady(); return; }
+  // basic Solana address: base58, 32-44 chars
+  const ok = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(val);
+  input.className = 'wallet-input ' + (ok ? 'valid' : 'invalid');
+  msg.style.display = 'block';
+  if(ok){
+    msg.style.color = 'var(--green)';
+    msg.textContent = '✓ Valid Solana address';
+  } else if(val.length < 32){
+    msg.style.color = 'var(--muted)';
+    msg.textContent = `${val.length}/32+ characters`;
+  } else {
+    msg.style.color = '#ff6060';
+    msg.textContent = '✗ Invalid address — must be a valid Solana public key';
+  }
+  checkReady();
+}
+
+function pasteAddr(){
+  navigator.clipboard.readText().then(t=>{
+    const input = document.getElementById('walletInput');
+    input.value = t.trim();
+    validateWallet(input);
+  }).catch(()=>{
+    document.getElementById('walletInput').focus();
+    showToast('📋','Paste','Click the address field and press Ctrl+V');
+  });
+}
+
+// ─── HUMAN CHECK ───
+function toggleHuman(){
+  humanVerified = !humanVerified;
+  const el = document.getElementById('humanCheck');
+  el.classList.toggle('checked', humanVerified);
+  el.textContent = humanVerified ? '✓' : '';
+  checkReady();
+}
+
+// ─── BUTTON GATE ───
+function checkReady(){
+  const wallet = document.getElementById('walletInput').value.trim();
+  const validWallet = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(wallet);
+  const btn = document.getElementById('claimBtn');
+  btn.disabled = !(validWallet && humanVerified && !isCooldown && selectedAmt > 0);
+}
+
+// ─── CLAIM ───
+function claim(){
+  const wallet = document.getElementById('walletInput').value.trim();
+  if(isCooldown) return;
+
+  const btn = document.getElementById('claimBtn');
+  btn.disabled = true;
+  btn.classList.add('loading');
+  btn.innerHTML = '<span class="btn-icon">⟳</span> Processing...';
+
+  setTimeout(()=>{
+    // simulate tx
+    lastTx = genTx();
+    const amt = selectedAmt;
+
+    // success modal
+    document.getElementById('modalAmt').textContent = `+${amt.toFixed(1)} SOL`;
+    document.getElementById('modalTx').textContent = lastTx;
+    document.getElementById('successModal').classList.add('show');
+
+    // add to claims list
+    const short = wallet.slice(0,6)+'...'+wallet.slice(-4);
+    const newClaim = {addr:short, amt:amt, time:'just now'};
+    const updated = [newClaim, ...initClaims].slice(0,12);
+    initClaims.unshift(newClaim);
+    renderClaims(initClaims.slice(0,12));
+
+    // update stats
+    bumpStat('statTotal', parseFloat(document.getElementById('statTotal').textContent.replace(',','')) + amt, true);
+    bumpStat('statClaims', parseInt(document.getElementById('statClaims').textContent.replace(',','')) + 1, false);
+    bumpStat('statToday', parseInt(document.getElementById('statToday').textContent) + 1, false);
+
+
+    // start cooldown
+    startCooldown(24 * 60); // 24h in minutes — show visually as quick demo
+    btn.classList.remove('loading');
+
+  }, 2200);
+}
+
+function bumpStat(id, val, isFloat){
+  const el = document.getElementById(id);
+  el.textContent = isFloat ? val.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',') : val.toLocaleString();
+}
+
+function startCooldown(minutes){
+  isCooldown = true;
+  const btn = document.getElementById('claimBtn');
+  const bar = document.getElementById('cooldownBar');
+  const fill = document.getElementById('cooldownFill');
+  bar.style.display = 'block';
+  fill.style.width = '100%';
+
+  let remaining = 20; // show 20s visually (real: 24h)
+  btn.disabled = true;
+  btn.innerHTML = `<span class="btn-icon">⏳</span> Cooldown — ${remaining}s`;
+
+  const interval = setInterval(()=>{
+    remaining--;
+    const pct = (remaining / 20) * 100;
+    fill.style.width = pct + '%';
+    btn.innerHTML = `<span class="btn-icon">⏳</span> Cooldown — ${remaining}s`;
+    if(remaining <= 0){
+      clearInterval(interval);
+      isCooldown = false;
+      bar.style.display = 'none';
+      fill.style.width = '100%';
+      btn.innerHTML = '<span class="btn-icon">◎</span> Request SOL';
+      checkReady();
+      showToast('✓','Ready Again','Your cooldown is over. You can claim again.');
+    }
+  }, 1000);
+}
+
+function genTx(){
+  const chars='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+  return Array.from({length:88},()=>chars[Math.floor(Math.random()*chars.length)]).join('');
+}
+
+function openExplorer(){
+  const net = currentNet.toLowerCase();
+  window.open(`https://solscan.io/tx/${lastTx}${net!=='mainnet'?'?cluster='+net:''}`, '_blank');
+}
+
+function closeModal(e){
+  if(e.target.id==='successModal') document.getElementById('successModal').classList.remove('show');
+}
+
+function copyDonate(){
+  const addr = document.getElementById('donateAddr').textContent;
+  navigator.clipboard.writeText(addr).then(()=>{
+    showToast('✓','Copied!','Donate address copied. Thank you! 💜');
+  });
+}
+
+// ─── AUTO LIVE FEED ───
+const walletPrefixes=['7xKX','4mQR','9pBZ','2nAL','6kFW','3rTY','8hCV','5jDN'];
+const walletSuffixes=['Q4Rp','Y7Lw','K3Xm','R9Qp','M2Tz','P6Vn','W8Kb','A4Rc'];
+const amts=[0.1,0.5,1.0,2.0,0.5,0.5,1.0,0.1];
+let autoIdx=0;
+
+setInterval(()=>{
+  const i = autoIdx % walletPrefixes.length;
+  const claim = {
+    addr: walletPrefixes[i]+'...'+walletSuffixes[(i+3)%8],
+    amt: amts[i],
+    time: 'just now'
+  };
+  initClaims.unshift(claim);
+  renderClaims(initClaims.slice(0,12));
+  autoIdx++;
+
+  // bump stats
+  const total = parseFloat(document.getElementById('statTotal').textContent.replace(',','')) + claim.amt;
+  document.getElementById('statTotal').textContent = total.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  const claims = parseInt(document.getElementById('statClaims').textContent.replace(',','')) + 1;
+  document.getElementById('statClaims').textContent = claims.toLocaleString();
+}, 8000);
+
+// ─── TOAST ───
+let toastTimer;
+function showToast(icon,title,msg){
+  clearTimeout(toastTimer);
+  document.getElementById('ti').textContent=icon;
+  document.getElementById('tt').textContent=title;
+  document.getElementById('tm').textContent=msg;
+  const t=document.getElementById('toast');
+  t.classList.add('show');
+  toastTimer=setTimeout(()=>t.classList.remove('show'),4000);
+}
+</script>
+</body>
+</html>
