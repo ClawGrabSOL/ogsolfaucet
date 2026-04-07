@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/api/claim", "destination": "/api/claim" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
