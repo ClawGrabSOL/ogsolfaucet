@@ -1,7 +1,7 @@
 {
-  "name": "sol-faucet",
+  "name": "sol-chest",
   "version": "1.0.0",
-  "description": "Solana SOL Faucet Dispenser",
+  "description": "SOL Chest — Solana giveaway chest",
   "scripts": { "start": "node server.js" },
   "dependencies": { "@solana/web3.js": "^1.95.0" }
 }

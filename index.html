@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>SOL Faucet — Free Solana</title>
+<title>SOL Chest — Free Solana</title>
 <link rel="icon" href="logo.png" type="image/png"/>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -419,8 +419,8 @@ footer a:hover{color:#6b7280}
 
 <nav>
   <div class="nav-brand">
-    <img src="logo.png" alt="SOL Faucet"/>
-    SOL Faucet
+    <img src="logo.png" alt="SOL Chest"/>
+    SOL Chest
   </div>
   <div class="nav-right">
     <div class="net-badge"><div class="net-dot"></div> Mainnet</div>
@@ -432,9 +432,9 @@ footer a:hover{color:#6b7280}
 
   <!-- HERO -->
   <div class="hero">
-    <img class="hero-logo" src="logo.png" alt="SOL" onclick="wobble(this)"/>
-    <h1>Free Solana Faucet</h1>
-    <p>Enter your wallet, solve the CAPTCHA, and receive</p>
+    <img class="hero-logo" src="logo.png" alt="SOL Chest" onclick="wobble(this)"/>
+    <h1>The SOL Chest</h1>
+    <p>Enter your wallet, solve the CAPTCHA, and crack open the chest for</p>
     <div class="hero-amount">0.001 SOL</div>
     <p style="font-size:12px;color:#9ca3af">10 minute cooldown per wallet</p>
   </div>
@@ -459,7 +459,7 @@ footer a:hover{color:#6b7280}
       </div>
 
       <button class="claim-btn" id="claim-btn" onclick="claim()">
-        💧 Claim 0.001 SOL
+        🗝️ Open Chest — 0.001 SOL
       </button>
       <div class="error-text" id="error-msg"></div>
     </div>
@@ -467,7 +467,7 @@ footer a:hover{color:#6b7280}
     <!-- LOADING -->
     <div class="loading-state" id="loading-state">
       <div class="spinner"></div>
-      <p>Sending SOL to your wallet...</p>
+      <p>Unlocking the chest...</p>
     </div>
 
     <!-- SUCCESS -->
@@ -493,6 +493,17 @@ footer a:hover{color:#6b7280}
     </div>
   </div>
 
+  <!-- CHEST ADDRESS -->
+  <div class="recent">
+    <div class="recent-header">Refill the Chest</div>
+    <div class="recent-list">
+      <div class="recent-item" style="justify-content:space-between;gap:10px">
+        <span class="recent-wallet" id="chest-addr">3gqPgKMapxsh85ssnhfdcYEZHwhbtaeGoiE8V5KjeWfS</span>
+        <button onclick="copyChest()" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:4px 10px;font-size:11px;color:#374151;cursor:pointer;font-family:'Inter',sans-serif">Copy</button>
+      </div>
+    </div>
+  </div>
+
   <!-- RECENT -->
   <div class="recent">
     <div class="recent-header">Recent Claims</div>
@@ -504,7 +515,7 @@ footer a:hover{color:#6b7280}
 </div>
 
 <footer>
-  <p>SOL Faucet · Powered by <a href="https://solana.com" target="_blank">Solana</a></p>
+  <p>SOL Chest · Powered by <a href="https://solana.com" target="_blank">Solana</a></p>
   <div class="divider">·</div>
   <p><a href="https://solscan.io" target="_blank">Solscan</a> · 0.001 SOL per claim · 10 min cooldown</p>
 </footer>
@@ -648,6 +659,15 @@ async function fetchPrice() {
 function wobble(el) {
   el.style.transform = 'rotate(-10deg) scale(1.1)';
   setTimeout(() => el.style.transform = '', 300);
+}
+
+function copyChest() {
+  const addr = document.getElementById('chest-addr').textContent.trim();
+  navigator.clipboard?.writeText(addr).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = addr; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch {} document.body.removeChild(ta);
+  });
 }
 
 setInterval(fetchPrice, 60000);
