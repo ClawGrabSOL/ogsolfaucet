@@ -1,121 +1,86 @@
-const https = require('https');
+// SPCX Faucet — pre-market allocation claim endpoint.
+// Records claims in-memory per-instance (replace with persistent store for prod).
+// Returns an allocation amount + a mock signature until wired to a real SPL transfer.
 
-// Rate limiting: wallet + IP
-const claims = {}; // { key: timestamp }
+const claims = Object.create(null);   // wallet -> { ts, rank }
+const ipClaims = Object.create(null); // ip -> ts
+let claimOrder = 0;
 
-function getCooldownMs() {
-  return 10 * 60 * 1000; // 10 minutes
+const COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24h per wallet (one claim, with a soft retry window)
+const IP_COOLDOWN_MS = 60 * 60 * 1000;    // 1h per IP
+
+function validWallet(s){
+  return typeof s === 'string' && /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(s.trim());
 }
 
-async function sendSOL(toWallet, amountSOL) {
-  const privateKeyBase58 = process.env.FAUCET_PRIVATE_KEY;
-  const rpcUrl = process.env.SOLANA_RPC || 'https://api.mainnet-beta.solana.com';
-
-  if (!privateKeyBase58) throw new Error('FAUCET_PRIVATE_KEY not set');
-
-  // We'll use the Solana JSON-RPC directly via HTTPS
-  // For real implementation, use @solana/web3.js in a full Node env
-  // This calls the RPC to transfer SOL
-
-  const lamports = Math.round(amountSOL * 1e9);
-
-  // Build transfer instruction via RPC
-  const payload = JSON.stringify({
-    jsonrpc: '2.0',
-    id: 1,
-    method: 'getLatestBlockhash',
-    params: [{ commitment: 'confirmed' }]
-  });
-
-  const blockhashData = await rpcCall(rpcUrl, payload);
-  if (!blockhashData?.result?.value?.blockhash) throw new Error('Could not fetch blockhash');
-
-  // For actual signing we need @solana/web3.js — return mock sig if no key
-  // In production: install @solana/web3.js and use it here
-  const mockSig = Array.from({length: 88}, () => '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'[Math.floor(Math.random() * 58)]).join('');
-  return mockSig;
+function pickAllocation(){
+  // Deterministic-ish tiered allocation. Adjust to taste.
+  const tiers = [
+    { weight: 60, amount: 1000 },
+    { weight: 25, amount: 2500 },
+    { weight: 10, amount: 5000 },
+    { weight: 4,  amount: 10000 },
+    { weight: 1,  amount: 25000 },
+  ];
+  let r = Math.random() * 100;
+  for (const t of tiers){
+    if (r < t.weight) return t.amount;
+    r -= t.weight;
+  }
+  return 1000;
 }
 
-function rpcCall(url, payload) {
-  return new Promise((resolve, reject) => {
-    const urlObj = new URL(url);
-    const options = {
-      hostname: urlObj.hostname,
-      path: urlObj.pathname,
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) }
-    };
-    const req = https.request(options, res => {
-      let d = '';
-      res.on('data', c => d += c);
-      res.on('end', () => { try { resolve(JSON.parse(d)); } catch { reject(new Error('Invalid JSON')); } });
-    });
-    req.on('error', reject);
-    req.write(payload);
-    req.end();
-  });
+function mockSignature(){
+  const alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+  let s = '';
+  for (let i = 0; i < 88; i++) s += alphabet[Math.floor(Math.random() * alphabet.length)];
+  return s;
 }
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,X-Session-ID');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') { res.status(204).end(); return; }
-  if (req.method !== 'POST') { res.status(405).json({ error: 'METHOD NOT ALLOWED' }); return; }
+  if (req.method !== 'POST')    { res.status(405).json({ error: 'METHOD NOT ALLOWED' }); return; }
 
-  const { wallet, amount, captcha, captchaAnswer } = req.body || {};
+  const body = req.body || {};
+  const wallet = (body.wallet || '').trim();
 
-  // Validate wallet
-  if (!wallet || typeof wallet !== 'string' || wallet.length < 32 || wallet.length > 44) {
-    return res.status(400).json({ error: 'INVALID WALLET ADDRESS' });
-  }
-  if (!/^[1-9A-HJ-NP-Za-km-z]+$/.test(wallet)) {
-    return res.status(400).json({ error: 'INVALID WALLET FORMAT' });
+  if (!validWallet(wallet)) {
+    return res.status(400).json({ error: 'Invalid Solana wallet address' });
   }
 
-  // Fixed amount only
-  if (amount !== 0.001) {
-    return res.status(400).json({ error: 'Invalid amount' });
-  }
-
-  // Validate captcha (server trusts client answer here — for prod use server-side captcha)
-  if (typeof captcha !== 'number' || captcha !== captchaAnswer) {
-    return res.status(400).json({ error: 'WRONG CAPTCHA ANSWER' });
-  }
-
-  // Rate limit by wallet
   const now = Date.now();
-  const cooldown = getCooldownMs();
-  const walletKey = `wallet_${wallet}_${amount}`;
-  const ipKey = `ip_${req.headers['x-forwarded-for'] || 'unknown'}_${amount}`;
+  const ip = (req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown').toString().split(',')[0].trim();
 
-  if (claims[walletKey] && now - claims[walletKey] < cooldown) {
-    const remaining = Math.ceil((cooldown - (now - claims[walletKey])) / 60000);
-    return res.status(429).json({ error: `Wallet on cooldown — ${remaining} min remaining` });
-  }
-
-  if (claims[ipKey] && now - claims[ipKey] < cooldown) {
-    const remaining = Math.ceil((cooldown - (now - claims[ipKey])) / 60000);
-    return res.status(429).json({ error: `Too many claims — ${remaining} min remaining` });
-  }
-
-  try {
-    const signature = await sendSOL(wallet, amount);
-
-    // Record claim
-    claims[walletKey] = now;
-    claims[ipKey] = now;
-
-    res.status(200).json({
-      success: true,
-      amount,
-      wallet,
-      signature,
-      message: `${amount} SOL sent to ${wallet}`
+  if (claims[wallet] && now - claims[wallet].ts < COOLDOWN_MS){
+    const remHr = Math.ceil((COOLDOWN_MS - (now - claims[wallet].ts)) / 3600000);
+    return res.status(429).json({
+      error: `Wallet already claimed. Cooldown: ${remHr}h.`,
+      rank: claims[wallet].rank,
+      amount: claims[wallet].amount,
     });
-  } catch (e) {
-    console.error('Faucet error:', e);
-    res.status(500).json({ error: 'DISPENSE FAILED: ' + e.message });
   }
+
+  if (ipClaims[ip] && now - ipClaims[ip] < IP_COOLDOWN_MS){
+    const remMin = Math.ceil((IP_COOLDOWN_MS - (now - ipClaims[ip])) / 60000);
+    return res.status(429).json({ error: `Too many claims from this network. Try again in ${remMin} min.` });
+  }
+
+  claimOrder += 1;
+  const allocation = pickAllocation();
+  claims[wallet] = { ts: now, rank: claimOrder, amount: allocation };
+  ipClaims[ip] = now;
+
+  return res.status(200).json({
+    success: true,
+    wallet,
+    amount: allocation.toLocaleString('en-US'),
+    rank: `#${claimOrder}`,
+    signature: mockSignature(),
+    snapshot: 'PENDING_LAUNCH',
+    message: `Pre-market allocation of ${allocation.toLocaleString('en-US')} SPCX recorded for ${wallet}.`,
+  });
 };

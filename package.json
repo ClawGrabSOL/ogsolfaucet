@@ -1,7 +1,7 @@
 {
-  "name": "solana-chest",
+  "name": "spcx-faucet",
   "version": "1.0.0",
-  "description": "Solana Chest — free SOL giveaway chest",
-  "scripts": { "start": "node server.js" },
-  "dependencies": { "@solana/web3.js": "^1.95.0" }
+  "description": "$SPCX — The On-Chain IPO. Faucet-based pre-market distribution on Solana.",
+  "private": true,
+  "engines": { "node": ">=18" }
 }
